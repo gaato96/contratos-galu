@@ -50,10 +50,11 @@ export default function EditarContratoPage() {
           setClientName(contract.client_name || "");
           setClientEmail(contract.client_email || "");
 
-          let ver = contract.contract_versions;
-          if (Array.isArray(ver)) {
-            ver = ver.find((v: any) => v.id === contract.active_version_id) || ver[0];
-          }
+          const versions = Array.isArray(contract.contract_versions)
+            ? contract.contract_versions
+            : [contract.contract_versions];
+          const ver = versions.find((v: any) => v && v.id === contract.active_version_id) || versions[0];
+
           if (ver) {
             setAmount(ver.total_amount?.toString() || "");
             setCurrency(ver.currency || "USD");
