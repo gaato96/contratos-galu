@@ -5,6 +5,7 @@ import { createClient } from "@/utils/supabase/server";
 
 export async function createContractAction(data: any) {
   const supabase = await createClient();
+  const isDraft = data.isDraft === true;
 
   // 1. Crear el contrato principal
   const { data: contractData, error: contractError } = await supabase
@@ -12,8 +13,8 @@ export async function createContractAction(data: any) {
     .insert([
       {
         client_name: data.clientName,
-        client_email: data.clientEmail,
-        current_status: "SENT",
+        client_email: data.clientEmail || "",
+        current_status: isDraft ? "DRAFT" : "SENT",
       },
     ])
     .select("id")
@@ -29,7 +30,7 @@ export async function createContractAction(data: any) {
         contract_id: contractData.id,
         version_number: 1,
         content: { sections: data.sections },
-        total_amount: data.amount,
+        total_amount: data.amount || 0,
         currency: data.currency,
         is_active: true,
       },
@@ -47,17 +48,21 @@ export async function createContractAction(data: any) {
 
   if (updateError) throw updateError;
 
-  // 4. Log the audit event
-  await supabase.from("audit_logs").insert([
-    {
-      contract_id: contractData.id,
-      version_id: versionData.id,
-      action_type: "SENT",
-      user_agent: "Sistema Creator",
-    },
-  ]);
+  // 4. Log the audit event (solo si no es borrador)
+  if (!isDraft) {
+    await supabase.from("audit_logs").insert([
+      {
+        contract_id: contractData.id,
+        version_id: versionData.id,
+        action_type: "SENT",
+        user_agent: "Sistema Creator",
+      },
+    ]);
+  }
 
-  return { success: true, contractId: contractData.id };
+  revalidatePath("/");
+
+  return { success: true, contractId: contractData.id, isDraft };
 }
 
 export async function getDashboardData() {

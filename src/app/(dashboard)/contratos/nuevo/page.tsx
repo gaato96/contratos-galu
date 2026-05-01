@@ -92,6 +92,35 @@ export default function NuevoContratoPage() {
     }
   };
 
+  const [isSavingDraft, setIsSavingDraft] = useState(false);
+
+  const handleSaveDraft = async () => {
+    if (!clientName) {
+      setError("Por favor ingresa al menos el nombre del cliente para guardar el borrador.");
+      return;
+    }
+    setIsSavingDraft(true);
+    setError("");
+    try {
+      const result = await createContractAction({
+        clientName,
+        clientEmail,
+        amount: amount ? parseFloat(amount) : 0,
+        currency,
+        sections,
+        isDraft: true
+      });
+      if (result.success) {
+        alert("Borrador guardado correctamente.");
+        window.location.href = "/";
+      }
+    } catch (err: any) {
+      setError("Error al guardar borrador: " + err.message);
+    } finally {
+      setIsSavingDraft(false);
+    }
+  };
+
   const addSection = () => {
     // Insert new section right before the first default section (which have IDs "1", "2", "3")
     const newSection = { id: Date.now().toString(), title: "", body: "" };
@@ -122,8 +151,12 @@ export default function NuevoContratoPage() {
           <p className="text-[var(--color-text-muted)] mt-1">Crea un contrato modular para enviar a firma electrónica.</p>
         </div>
         <div className="flex space-x-3">
-          <button className="flex items-center space-x-2 px-4 py-2 bg-white border border-gray-200 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors font-medium">
-            <Save className="w-4 h-4" />
+          <button
+            onClick={handleSaveDraft}
+            disabled={isSavingDraft || !!successLink}
+            className="flex items-center space-x-2 px-4 py-2 bg-white border border-gray-200 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors font-medium disabled:opacity-50"
+          >
+            {isSavingDraft ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
             <span>Guardar Borrador</span>
           </button>
           <button
