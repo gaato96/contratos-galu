@@ -1,4 +1,4 @@
-import { FileText, Send, Eye, PenTool, CheckCircle, Trash2 } from "lucide-react";
+import { FileText, Send, Eye, PenTool, CheckCircle, Trash2, PlusCircle, Clock } from "lucide-react";
 import { getDashboardData, deleteContractAction } from "@/app/actions/contracts";
 import Link from "next/link";
 import DownloadPdfButton from "@/components/DownloadPdfButton";
