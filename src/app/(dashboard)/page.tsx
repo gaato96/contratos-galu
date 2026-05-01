@@ -3,6 +3,7 @@ import { getDashboardData } from "@/app/actions/contracts";
 import Link from "next/link";
 import DownloadPdfButton from "@/components/DownloadPdfButton";
 import DeleteContractButton from "@/components/DeleteContractButton";
+import DuplicateContractButton from "@/components/DuplicateContractButton";
 
 export default async function DashboardPage() {
   const contracts = await getDashboardData();
@@ -111,6 +112,7 @@ export default async function DashboardPage() {
                         {contract.current_status === "COMPLETED" && (
                           <DownloadPdfButton contractId={contract.id} />
                         )}
+                        <DuplicateContractButton contractId={contract.id} />
                         <DeleteContractButton contractId={contract.id} />
                       </div>
                     </td>

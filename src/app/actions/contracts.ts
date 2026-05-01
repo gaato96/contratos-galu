@@ -148,6 +148,71 @@ export async function updateContractAction(data: any) {
   return { success: true, contractId: data.contractId, isDraft };
 }
 
+export async function duplicateContractAction(contractId: string) {
+  const supabase = await createClient();
+
+  // 1. Fetch original contract and its latest version
+  const { data: originalContract, error: fetchError } = await supabase
+    .from("contracts")
+    .select("*, contract_versions!fk_active_version(*)")
+    .eq("id", contractId)
+    .single();
+
+  if (fetchError) throw fetchError;
+
+  const versions = Array.isArray(originalContract.contract_versions)
+    ? originalContract.contract_versions
+    : [originalContract.contract_versions];
+  const activeVersion = versions.find((v: any) => v && v.id === originalContract.active_version_id) || versions[0];
+
+  if (!activeVersion) throw new Error("No active version found to duplicate");
+
+  // 2. Create the new contract as DRAFT
+  const { data: newContract, error: contractError } = await supabase
+    .from("contracts")
+    .insert([
+      {
+        client_name: `${originalContract.client_name} (Copia)`,
+        client_email: originalContract.client_email || "",
+        current_status: "DRAFT",
+      },
+    ])
+    .select("id")
+    .single();
+
+  if (contractError) throw contractError;
+
+  // 3. Create the new version for the duplicated contract
+  const { data: newVersion, error: versionError } = await supabase
+    .from("contract_versions")
+    .insert([
+      {
+        contract_id: newContract.id,
+        version_number: 1,
+        content: activeVersion.content,
+        total_amount: activeVersion.total_amount,
+        currency: activeVersion.currency,
+        is_active: true,
+      },
+    ])
+    .select("id")
+    .single();
+
+  if (versionError) throw versionError;
+
+  // 4. Update duplicated contract with active_version_id
+  const { error: updateError } = await supabase
+    .from("contracts")
+    .update({ active_version_id: newVersion.id })
+    .eq("id", newContract.id);
+
+  if (updateError) throw updateError;
+
+  revalidatePath("/");
+
+  return { success: true, contractId: newContract.id };
+}
+
 export async function getDashboardData() {
   const supabase = await createClient();
 
