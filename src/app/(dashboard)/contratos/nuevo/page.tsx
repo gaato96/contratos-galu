@@ -1,7 +1,9 @@
 "use client";
 
 import { useState } from "react";
-import { Plus, Trash2, Save, Send } from "lucide-react";
+import { Plus, Trash2, Save, Send, Loader2, Link as LinkIcon, CheckCircle2 } from "lucide-react";
+import { createContractAction } from "@/app/actions/contracts";
+import Link from "next/link";
 
 interface Section {
   id: string;
@@ -33,6 +35,37 @@ export default function NuevoContratoPage() {
     }
   ]);
 
+  const [isLoading, setIsLoading] = useState(false);
+  const [successLink, setSuccessLink] = useState("");
+  const [error, setError] = useState("");
+
+  const handleGenerate = async () => {
+    if (!clientName || !clientEmail || !amount) {
+      setError("Por favor completa el nombre, correo y monto.");
+      return;
+    }
+    
+    setIsLoading(true);
+    setError("");
+    try {
+      const result = await createContractAction({
+        clientName,
+        clientEmail,
+        amount: parseFloat(amount),
+        currency,
+        sections
+      });
+
+      if (result.success) {
+        setSuccessLink(`${window.location.origin}/c/${result.contractId}`);
+      }
+    } catch (err: any) {
+      setError("Ocurrió un error al generar el contrato: " + err.message);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   const addSection = () => {
     setSections([...sections, { id: Date.now().toString(), title: "", body: "" }]);
   };
@@ -57,14 +90,41 @@ export default function NuevoContratoPage() {
             <Save className="w-4 h-4" />
             <span>Guardar Borrador</span>
           </button>
-          <button className="flex items-center space-x-2 px-4 py-2 bg-[var(--color-brand-navy)] text-white rounded-lg hover:bg-[var(--color-brand-navy-dark)] transition-colors shadow-md font-medium">
-            <Send className="w-4 h-4" />
+          <button 
+            onClick={handleGenerate}
+            disabled={isLoading || !!successLink}
+            className="flex items-center space-x-2 px-4 py-2 bg-[var(--color-brand-navy)] text-white rounded-lg hover:bg-[var(--color-brand-navy-dark)] transition-colors shadow-md font-medium disabled:opacity-50"
+          >
+            {isLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
             <span>Generar y Enviar</span>
           </button>
         </div>
       </div>
 
-      <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
+      {error && <div className="p-4 bg-red-50 text-red-700 rounded-lg border border-red-200">{error}</div>}
+
+      {successLink && (
+        <div className="p-6 bg-green-50 border border-green-200 rounded-xl flex flex-col items-center justify-center space-y-4 animate-in fade-in zoom-in duration-300">
+          <div className="flex items-center space-x-2 text-green-800">
+            <CheckCircle2 className="w-6 h-6" />
+            <span className="text-xl font-bold">¡Contrato Generado con Éxito!</span>
+          </div>
+          <p className="text-green-700">Comparte este enlace único y seguro con tu cliente:</p>
+          <div className="flex items-center space-x-2 bg-white p-3 rounded-lg border border-green-300 w-full max-w-2xl shadow-sm">
+            <LinkIcon className="w-5 h-5 text-gray-400" />
+            <input type="text" readOnly value={successLink} className="flex-1 outline-none bg-transparent text-gray-700 font-mono text-sm" />
+            <button 
+              onClick={() => navigator.clipboard.writeText(successLink)}
+              className="px-3 py-1 bg-green-100 text-green-700 hover:bg-green-200 rounded text-sm font-medium transition-colors"
+            >
+              Copiar
+            </button>
+          </div>
+          <Link href="/" className="mt-2 text-[var(--color-brand-navy)] font-medium hover:underline">Volver al Dashboard</Link>
+        </div>
+      )}
+
+      <div className={`bg-white p-6 rounded-xl shadow-sm border border-gray-100 ${successLink ? 'opacity-50 pointer-events-none' : ''}`}>
         <h2 className="text-xl font-semibold text-[var(--color-brand-navy)] mb-6">Datos del Cliente y Proyecto</h2>
         
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
