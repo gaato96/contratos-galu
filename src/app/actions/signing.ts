@@ -43,7 +43,7 @@ export async function requestOTPAction(contractId: string) {
   if (process.env.RESEND_API_KEY) {
     try {
       const { data, error } = await resend.emails.send({
-        from: "GALU Legal-Tech <onboarding@resend.dev>",
+        from: "GALU Legal-Tech <contratos@galuweb.com>",
         to: contract.client_email,
         subject: "Código de Firma Electrónica - GALU",
         html: `
