@@ -70,7 +70,7 @@ export async function getDashboardData() {
       current_status,
       updated_at,
       active_version_id,
-      contract_versions!contracts_active_version_id_fkey(total_amount, currency)
+      contract_versions!fk_active_version(total_amount, currency)
     `)
     .order("updated_at", { ascending: false });
 
@@ -92,7 +92,7 @@ export async function getContractForClient(contractId: string) {
       client_name,
       current_status,
       active_version_id,
-      contract_versions!contracts_active_version_id_fkey(id, content, total_amount, currency)
+      contract_versions!fk_active_version(id, content, total_amount, currency)
     `)
     .eq("id", contractId)
     .single();
