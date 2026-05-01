@@ -4,6 +4,7 @@ import { useState } from "react";
 import { SignaturePad } from "@/components/SignaturePad";
 import { ShieldCheck, Mail, CheckCircle2, Loader2 } from "lucide-react";
 import { requestOTPAction, verifyOTPAction } from "@/app/actions/signing";
+import { getAgencySettingsAction } from "@/app/actions/settings";
 import { generatePDF } from "@/utils/pdfGenerator";
 
 export default function ClientPortalView({ contract }: { contract: any }) {
@@ -59,8 +60,12 @@ export default function ClientPortalView({ contract }: { contract: any }) {
       const result = await verifyOTPAction(contract.id, code, signatureData!, signerName);
       if (result.success) {
         setStep("SUCCESS");
-        // Generar PDF
-        generatePDF(contract, version, signatureData!, result.auditData);
+        // Generar PDF con assets de agencia
+        const settings = await getAgencySettingsAction();
+        generatePDF(contract, version, signatureData!, result.auditData, {
+          logo_base64: settings?.logo_base64,
+          agency_signature_base64: settings?.agency_signature_base64
+        });
       } else {
         setError(result.error || "Código incorrecto");
       }
@@ -113,8 +118,8 @@ export default function ClientPortalView({ contract }: { contract: any }) {
                       onClick={() => handleAccept(section.id)}
                       disabled={isAccepted}
                       className={`flex items-center space-x-2 px-6 py-2.5 rounded shadow-sm font-medium transition-all ${isAccepted
-                          ? 'bg-slate-200 text-slate-600'
-                          : 'bg-slate-900 text-white hover:bg-slate-800'
+                        ? 'bg-slate-200 text-slate-600'
+                        : 'bg-slate-900 text-white hover:bg-slate-800'
                         }`}
                     >
                       {isAccepted ? (

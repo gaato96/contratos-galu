@@ -1,8 +1,9 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Plus, Trash2, Save, Send, Loader2, Link as LinkIcon, CheckCircle2 } from "lucide-react";
 import { createContractAction } from "@/app/actions/contracts";
+import { getAgencySettingsAction } from "@/app/actions/settings";
 import Link from "next/link";
 
 interface Section {
@@ -17,7 +18,10 @@ export default function NuevoContratoPage() {
   const [amount, setAmount] = useState("");
   const [currency, setCurrency] = useState("USD");
 
-  const [sections, setSections] = useState<Section[]>([
+  const [sections, setSections] = useState<Section[]>([]);
+  const [sectionsLoaded, setSectionsLoaded] = useState(false);
+
+  const defaultFallbackClauses: Section[] = [
     {
       id: "1",
       title: "Jurisdicción y Ley Aplicable",
@@ -33,7 +37,29 @@ export default function NuevoContratoPage() {
       title: "Limitación de Responsabilidad",
       body: "El software se entrega \"tal como está\" (as is). El Desarrollador no será responsable por daños indirectos, lucro cesante, pérdida de datos o interrupciones del negocio derivados del uso del software. La responsabilidad máxima del Desarrollador frente al Cliente estará estrictamente limitada al monto total de los honorarios efectivamente abonados por el Cliente por el desarrollo del software."
     }
-  ]);
+  ];
+
+  useEffect(() => {
+    const loadSettings = async () => {
+      try {
+        const settings = await getAgencySettingsAction();
+        if (settings && settings.default_clauses && settings.default_clauses.length > 0) {
+          const mapped = settings.default_clauses.map((c: any, i: number) => ({
+            id: `settings-${i}`,
+            title: c.title || "",
+            body: c.body || ""
+          }));
+          setSections(mapped);
+        } else {
+          setSections(defaultFallbackClauses);
+        }
+      } catch {
+        setSections(defaultFallbackClauses);
+      }
+      setSectionsLoaded(true);
+    };
+    loadSettings();
+  }, []);
 
   const [isLoading, setIsLoading] = useState(false);
   const [successLink, setSuccessLink] = useState("");

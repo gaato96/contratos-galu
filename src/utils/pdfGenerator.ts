@@ -1,6 +1,11 @@
 import jsPDF from "jspdf";
 
-export function generatePDF(contract: any, version: any, signatureBase64: string, auditData: any) {
+interface AgencyAssets {
+  logo_base64?: string | null;
+  agency_signature_base64?: string | null;
+}
+
+export function generatePDF(contract: any, version: any, signatureBase64: string, auditData: any, agencyAssets?: AgencyAssets) {
   const doc = new jsPDF();
 
   const marginLeft = 20;
@@ -34,6 +39,16 @@ export function generatePDF(contract: any, version: any, signatureBase64: string
 
     cursorY += customYOffset;
   };
+
+  // 0. Logo de la Agencia (si existe)
+  if (agencyAssets?.logo_base64) {
+    try {
+      doc.addImage(agencyAssets.logo_base64, 'PNG', marginLeft, cursorY - 10, 35, 15);
+      cursorY += 12;
+    } catch (e) {
+      console.warn("No se pudo inyectar el logo:", e);
+    }
+  }
 
   // 1. Título General
   cursorY += 10;
@@ -74,10 +89,21 @@ export function generatePDF(contract: any, version: any, signatureBase64: string
   // Cliente Signature Image
   doc.addImage(signatureBase64, 'PNG', marginLeft, cursorY, 50, 25);
 
-  // Agencia Text Box / Signature Placeholder
-  doc.setFont("helvetica", "italic");
-  doc.text("Documento validado y", rightColumnX, cursorY + 10);
-  doc.text("aprobado electrónicamente.", rightColumnX, cursorY + 16);
+  // Agencia Signature Image (si existe) o texto de placeholder
+  if (agencyAssets?.agency_signature_base64) {
+    try {
+      doc.addImage(agencyAssets.agency_signature_base64, 'PNG', rightColumnX, cursorY, 50, 25);
+    } catch (e) {
+      console.warn("No se pudo inyectar la firma de agencia:", e);
+      doc.setFont("helvetica", "italic");
+      doc.text("Documento validado y", rightColumnX, cursorY + 10);
+      doc.text("aprobado electrónicamente.", rightColumnX, cursorY + 16);
+    }
+  } else {
+    doc.setFont("helvetica", "italic");
+    doc.text("Documento validado y", rightColumnX, cursorY + 10);
+    doc.text("aprobado electrónicamente.", rightColumnX, cursorY + 16);
+  }
 
   cursorY += 35;
 

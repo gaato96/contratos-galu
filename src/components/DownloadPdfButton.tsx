@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { Download, Loader2 } from "lucide-react";
 import { getSignedContractData } from "@/app/actions/contracts";
+import { getAgencySettingsAction } from "@/app/actions/settings";
 import { generatePDF } from "@/utils/pdfGenerator";
 
 export default function DownloadPdfButton({ contractId }: { contractId: string }) {
@@ -11,9 +12,15 @@ export default function DownloadPdfButton({ contractId }: { contractId: string }
     const handleDownload = async () => {
         setIsLoading(true);
         try {
-            const data = await getSignedContractData(contractId);
+            const [data, settings] = await Promise.all([
+                getSignedContractData(contractId),
+                getAgencySettingsAction()
+            ]);
             if (data) {
-                generatePDF(data.contract, data.version, data.signature.base64_image, data.auditLog.metadata);
+                generatePDF(data.contract, data.version, data.signature.base64_image, data.auditLog.metadata, {
+                    logo_base64: settings?.logo_base64,
+                    agency_signature_base64: settings?.agency_signature_base64
+                });
             } else {
                 alert("No se pudo obtener la información completa del contrato firmado.");
             }
