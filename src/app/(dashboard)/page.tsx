@@ -1,7 +1,8 @@
 import { FileText, Send, Eye, PenTool, CheckCircle, Trash2, PlusCircle, Clock } from "lucide-react";
-import { getDashboardData, deleteContractAction } from "@/app/actions/contracts";
+import { getDashboardData } from "@/app/actions/contracts";
 import Link from "next/link";
 import DownloadPdfButton from "@/components/DownloadPdfButton";
+import DeleteContractButton from "@/components/DeleteContractButton";
 
 export default async function DashboardPage() {
   const contracts = await getDashboardData();
@@ -106,20 +107,7 @@ export default async function DashboardPage() {
                         {contract.current_status === "COMPLETED" && (
                           <DownloadPdfButton contractId={contract.id} />
                         )}
-                        <form action={deleteContractAction.bind(null, contract.id)}>
-                          <button
-                            type="submit"
-                            title="Eliminar contrato"
-                            className="p-1 rounded bg-red-50 text-red-500 hover:bg-red-100 hover:text-red-700 transition-colors ml-2"
-                            onClick={(e) => {
-                              if (!confirm("¿Estás seguro de eliminar este contrato? Esta acción no se puede deshacer.")) {
-                                e.preventDefault();
-                              }
-                            }}
-                          >
-                            <Trash2 className="w-5 h-5" />
-                          </button>
-                        </form>
+                        <DeleteContractButton contractId={contract.id} />
                       </div>
                     </td>
                   </tr>
