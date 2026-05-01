@@ -103,7 +103,11 @@ export default async function DashboardPage() {
                     </td>
                     <td className="p-4">
                       <div className="flex items-center gap-2">
-                        <Link href={`/c/${contract.id}`} target="_blank" className="text-[var(--color-brand-navy)] hover:text-[var(--color-brand-gold-dark)] text-sm font-medium">Ver Link</Link>
+                        {contract.current_status === "DRAFT" ? (
+                          <Link href={`/contratos/editar/${contract.id}`} className="text-[var(--color-brand-gold)] hover:text-yellow-600 text-sm font-medium">Editar</Link>
+                        ) : (
+                          <Link href={`/c/${contract.id}`} target="_blank" className="text-[var(--color-brand-navy)] hover:text-[var(--color-brand-gold-dark)] text-sm font-medium">Ver Link</Link>
+                        )}
                         {contract.current_status === "COMPLETED" && (
                           <DownloadPdfButton contractId={contract.id} />
                         )}
