@@ -16,7 +16,7 @@ export default function NuevoContratoPage() {
   const [clientEmail, setClientEmail] = useState("");
   const [amount, setAmount] = useState("");
   const [currency, setCurrency] = useState("USD");
-  
+
   const [sections, setSections] = useState<Section[]>([
     {
       id: "1",
@@ -44,7 +44,7 @@ export default function NuevoContratoPage() {
       setError("Por favor completa el nombre, correo y monto.");
       return;
     }
-    
+
     setIsLoading(true);
     setError("");
     try {
@@ -67,7 +67,17 @@ export default function NuevoContratoPage() {
   };
 
   const addSection = () => {
-    setSections([...sections, { id: Date.now().toString(), title: "", body: "" }]);
+    // Insert new section right before the first default section (which have IDs "1", "2", "3")
+    const newSection = { id: Date.now().toString(), title: "", body: "" };
+    const firstDefaultIndex = sections.findIndex(s => ["1", "2", "3"].includes(s.id));
+
+    if (firstDefaultIndex !== -1) {
+      const newSections = [...sections];
+      newSections.splice(firstDefaultIndex, 0, newSection);
+      setSections(newSections);
+    } else {
+      setSections([...sections, newSection]);
+    }
   };
 
   const removeSection = (id: string) => {
@@ -90,7 +100,7 @@ export default function NuevoContratoPage() {
             <Save className="w-4 h-4" />
             <span>Guardar Borrador</span>
           </button>
-          <button 
+          <button
             onClick={handleGenerate}
             disabled={isLoading || !!successLink}
             className="flex items-center space-x-2 px-4 py-2 bg-[var(--color-brand-navy)] text-white rounded-lg hover:bg-[var(--color-brand-navy-dark)] transition-colors shadow-md font-medium disabled:opacity-50"
@@ -113,7 +123,7 @@ export default function NuevoContratoPage() {
           <div className="flex items-center space-x-2 bg-white p-3 rounded-lg border border-green-300 w-full max-w-2xl shadow-sm">
             <LinkIcon className="w-5 h-5 text-gray-400" />
             <input type="text" readOnly value={successLink} className="flex-1 outline-none bg-transparent text-gray-700 font-mono text-sm" />
-            <button 
+            <button
               onClick={() => navigator.clipboard.writeText(successLink)}
               className="px-3 py-1 bg-green-100 text-green-700 hover:bg-green-200 rounded text-sm font-medium transition-colors"
             >
@@ -126,12 +136,12 @@ export default function NuevoContratoPage() {
 
       <div className={`bg-white p-6 rounded-xl shadow-sm border border-gray-100 ${successLink ? 'opacity-50 pointer-events-none' : ''}`}>
         <h2 className="text-xl font-semibold text-[var(--color-brand-navy)] mb-6">Datos del Cliente y Proyecto</h2>
-        
+
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">Nombre del Cliente o Empresa</label>
-            <input 
-              type="text" 
+            <input
+              type="text"
               value={clientName}
               onChange={(e) => setClientName(e.target.value)}
               className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[var(--color-brand-gold)] focus:border-[var(--color-brand-gold)] outline-none transition-all"
@@ -140,8 +150,8 @@ export default function NuevoContratoPage() {
           </div>
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">Correo Electrónico (Para Validación OTP)</label>
-            <input 
-              type="email" 
+            <input
+              type="email"
               value={clientEmail}
               onChange={(e) => setClientEmail(e.target.value)}
               className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[var(--color-brand-gold)] focus:border-[var(--color-brand-gold)] outline-none transition-all"
@@ -150,8 +160,8 @@ export default function NuevoContratoPage() {
           </div>
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">Monto Total</label>
-            <input 
-              type="number" 
+            <input
+              type="number"
               value={amount}
               onChange={(e) => setAmount(e.target.value)}
               className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[var(--color-brand-gold)] focus:border-[var(--color-brand-gold)] outline-none transition-all"
@@ -160,7 +170,7 @@ export default function NuevoContratoPage() {
           </div>
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">Moneda</label>
-            <select 
+            <select
               value={currency}
               onChange={(e) => setCurrency(e.target.value)}
               className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[var(--color-brand-gold)] focus:border-[var(--color-brand-gold)] outline-none transition-all bg-white"
@@ -175,7 +185,7 @@ export default function NuevoContratoPage() {
       <div className="space-y-6">
         <div className="flex justify-between items-center">
           <h2 className="text-xl font-semibold text-[var(--color-brand-navy)]">Cláusulas del Contrato</h2>
-          <button 
+          <button
             onClick={addSection}
             className="flex items-center space-x-2 text-sm font-medium text-[var(--color-brand-navy)] hover:text-[var(--color-brand-gold-dark)] transition-colors"
           >
@@ -187,7 +197,7 @@ export default function NuevoContratoPage() {
         {sections.map((section, index) => (
           <div key={section.id} className="bg-white p-6 rounded-xl shadow-sm border border-gray-100 relative group">
             <div className="absolute top-4 right-4 opacity-0 group-hover:opacity-100 transition-opacity">
-              <button 
+              <button
                 onClick={() => removeSection(section.id)}
                 className="p-2 text-red-500 hover:bg-red-50 rounded-lg transition-colors"
                 title="Eliminar Sección"
@@ -195,11 +205,11 @@ export default function NuevoContratoPage() {
                 <Trash2 className="w-5 h-5" />
               </button>
             </div>
-            
+
             <div className="mb-4 pr-12">
               <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">Título de la Sección {index + 1}</label>
-              <input 
-                type="text" 
+              <input
+                type="text"
                 value={section.title}
                 onChange={(e) => updateSection(section.id, "title", e.target.value)}
                 className="w-full px-4 py-2 font-semibold text-lg border border-gray-300 rounded-lg focus:ring-2 focus:ring-[var(--color-brand-gold)] focus:border-[var(--color-brand-gold)] outline-none transition-all"
@@ -208,7 +218,7 @@ export default function NuevoContratoPage() {
             </div>
             <div>
               <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">Contenido</label>
-              <textarea 
+              <textarea
                 value={section.body}
                 onChange={(e) => updateSection(section.id, "body", e.target.value)}
                 rows={4}

@@ -2,7 +2,7 @@ import jsPDF from "jspdf";
 
 export function generatePDF(contract: any, version: any, signatureBase64: string, auditData: any) {
   const doc = new jsPDF();
-  
+
   const marginLeft = 20;
   let cursorY = 20;
   const pageWidth = doc.internal.pageSize.getWidth();
@@ -12,14 +12,14 @@ export function generatePDF(contract: any, version: any, signatureBase64: string
     doc.setFont("helvetica", isBold ? "bold" : "normal");
     doc.setFontSize(fontSize);
     doc.setTextColor(color);
-    
+
     const lines = doc.splitTextToSize(text, maxWidth);
-    
+
     if (cursorY + (lines.length * 7) > 280) {
       doc.addPage();
       cursorY = 20;
     }
-    
+
     doc.text(lines, marginLeft, cursorY);
     cursorY += (lines.length * 7) + 5;
   };
@@ -40,14 +40,28 @@ export function generatePDF(contract: any, version: any, signatureBase64: string
   // 3. Sello de Auditoría y Firma (Página Nueva si es necesario)
   doc.addPage();
   cursorY = 20;
-  
+
   printText("CERTIFICADO DE FIRMA ELECTRÓNICA Y AUDITORÍA", 18, true, "#273E59");
   printText("Documento procesado bajo cumplimiento de trazabilidad.", 10, false, "#64748B");
   cursorY += 10;
 
-  // Firma
-  printText("Firma del Cliente:", 12, true);
+  // Firmas
+  const rightColumnX = 110;
+
+  doc.setFont("helvetica", "bold");
+  doc.setFontSize(12);
+  doc.setTextColor("#000000");
+  doc.text("Firma del Cliente:", marginLeft, cursorY);
+  doc.text("Por la Agencia:", rightColumnX, cursorY);
+
+  cursorY += 5;
   doc.addImage(signatureBase64, 'PNG', marginLeft, cursorY, 80, 40);
+
+  doc.setFont("helvetica", "italic");
+  doc.setFontSize(11);
+  doc.text("Documento validado y", rightColumnX, cursorY + 15);
+  doc.text("aprobado por GALU.", rightColumnX, cursorY + 22);
+
   cursorY += 50;
 
   // Metadata

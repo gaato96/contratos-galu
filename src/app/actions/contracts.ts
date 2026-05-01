@@ -100,3 +100,30 @@ export async function getContractForClient(contractId: string) {
   if (error) return null;
   return data;
 }
+
+export async function getSignedContractData(contractId: string) {
+  const supabase = await createClient();
+
+  const { data: contract } = await supabase.from("contracts").select("*, contract_versions(*)").eq("id", contractId).single();
+  const { data: signature } = await supabase.from("signatures").select("*").eq("contract_id", contractId).single();
+  const { data: auditLog } = await supabase.from("audit_logs").select("*").eq("contract_id", contractId).eq("action_type", "COMPLETED").order("created_at", { ascending: false }).limit(1).single();
+
+  if (!contract || !signature || !auditLog) return null;
+
+  const versionArray = Array.isArray(contract.contract_versions) ? contract.contract_versions : [contract.contract_versions];
+  const version = versionArray.find((v: any) => v.id === contract.active_version_id) || versionArray[0];
+
+  return {
+    contract,
+    version,
+    signature,
+    auditLog: {
+      metadata: {
+        timestamp: auditLog.created_at,
+        ip: auditLog.ip_address,
+        hash: signature.document_hash,
+        email: signature.user_identifier || contract.client_email
+      }
+    }
+  };
+}

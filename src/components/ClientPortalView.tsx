@@ -84,37 +84,37 @@ export default function ClientPortalView({ contract }: { contract: any }) {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 flex flex-col items-center py-12 px-4 sm:px-6">
+    <div className="min-h-screen bg-slate-50 flex flex-col items-center py-12 px-4 sm:px-6 font-serif text-slate-900">
       <div className="w-full max-w-3xl text-center mb-8">
-        <h1 className="text-3xl font-bold text-[var(--color-brand-navy)]">Contrato de Servicios</h1>
-        <p className="text-gray-600 mt-2">Preparado para {contract.client_name}</p>
-        <p className="text-lg font-bold text-[var(--color-brand-gold-dark)] mt-2">Total: {version.currency} ${version.total_amount}</p>
+        <h1 className="text-4xl font-bold text-slate-900 mb-3">Contrato de Servicios</h1>
+        <p className="text-slate-600 mt-2 text-lg">Preparado para: <span className="font-semibold text-slate-800">{contract.client_name}</span></p>
+        <p className="text-slate-600 mt-1">Monto Total: <span className="font-semibold text-slate-800">{version.currency} ${version.total_amount}</span></p>
       </div>
 
-      <div className="w-full max-w-3xl bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden">
+      <div className="w-full max-w-3xl bg-white shadow-xl border border-slate-200 overflow-hidden">
         
         {step === "READING" && (
-          <div className="p-8">
-            <div className="bg-blue-50 text-blue-800 p-4 rounded-lg mb-8 text-sm flex items-start space-x-3">
-              <ShieldCheck className="w-5 h-5 flex-shrink-0 mt-0.5" />
-              <p>Por favor, lea cada sección detenidamente y marque su conformidad. Una vez aceptadas todas las secciones, podrá proceder a la firma electrónica del documento.</p>
+          <div className="p-8 md:p-12">
+            <div className="bg-slate-50 text-slate-800 p-5 rounded border border-slate-200 mb-8 text-sm flex items-start space-x-3 text-justify leading-relaxed">
+              <ShieldCheck className="w-6 h-6 flex-shrink-0 mt-0.5 text-slate-600" />
+              <p>El presente documento establece los términos y condiciones de los servicios a proveer. Por favor, lea detenidamente cada una de las siguientes cláusulas y preste su conformidad haciendo clic en el botón correspondiente. Una vez aceptados todos los términos, se habilitará la opción para proceder con la firma electrónica y legal del documento.</p>
             </div>
 
             <div className="space-y-6">
               {sections.map((section: any) => {
                 const isAccepted = acceptedSections.has(section.id);
                 return (
-                  <div key={section.id} className={`p-6 rounded-xl border-2 transition-all duration-300 ${isAccepted ? 'border-[var(--color-brand-gold)] bg-yellow-50/30' : 'border-gray-200 hover:border-gray-300'}`}>
-                    <h3 className="text-xl font-bold text-[var(--color-brand-navy)] mb-3">{section.title}</h3>
-                    <p className="text-gray-700 leading-relaxed mb-6">{section.body}</p>
+                  <div key={section.id} className={`p-6 md:px-8 border-b-2 transition-all duration-300 ${isAccepted ? 'bg-slate-50 border-slate-200' : 'border-slate-100 hover:bg-slate-50/50'}`}>
+                    <h3 className="text-xl font-bold text-slate-900 mb-4">{section.title}</h3>
+                    <p className="text-slate-700 leading-relaxed mb-6 text-justify">{section.body}</p>
                     
                     <button
                       onClick={() => handleAccept(section.id)}
                       disabled={isAccepted}
-                      className={`flex items-center space-x-2 px-6 py-2.5 rounded-lg font-medium transition-all ${
+                      className={`flex items-center space-x-2 px-6 py-2.5 rounded shadow-sm font-medium transition-all ${
                         isAccepted 
-                        ? 'bg-[var(--color-brand-gold)] text-[var(--color-brand-navy-dark)]'
-                        : 'bg-[var(--color-brand-navy)] text-white hover:bg-[var(--color-brand-navy-dark)] shadow-md'
+                        ? 'bg-slate-200 text-slate-600'
+                        : 'bg-slate-900 text-white hover:bg-slate-800'
                       }`}
                     >
                       {isAccepted ? (
@@ -175,9 +175,9 @@ export default function ClientPortalView({ contract }: { contract: any }) {
             <button
               onClick={handleVerify}
               disabled={isLoading || otp.join("").length !== 6}
-              className="px-8 py-3 bg-[var(--color-brand-gold)] text-[var(--color-brand-navy-dark)] font-bold rounded-lg hover:bg-[var(--color-brand-gold-dark)] transition-colors shadow-md w-full max-w-xs disabled:opacity-50 flex items-center justify-center mx-auto"
+              className="px-8 py-3 bg-slate-900 text-white font-bold rounded hover:bg-slate-800 transition-colors shadow-sm w-full max-w-xs disabled:opacity-50 flex items-center justify-center mx-auto"
             >
-              {isLoading ? <Loader2 className="w-5 h-5 animate-spin" /> : "Verificar y Firmar"}
+              {isLoading ? <Loader2 className="w-5 h-5 animate-spin" /> : "Proceder a la Firma"}
             </button>
           </div>
         )}

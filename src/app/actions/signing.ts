@@ -42,7 +42,7 @@ export async function requestOTPAction(contractId: string) {
   // 4. Enviar email con Resend
   if (process.env.RESEND_API_KEY) {
     try {
-      await resend.emails.send({
+      const { data, error } = await resend.emails.send({
         from: "GALU Legal-Tech <onboarding@resend.dev>",
         to: contract.client_email,
         subject: "Código de Firma Electrónica - GALU",
@@ -59,12 +59,20 @@ export async function requestOTPAction(contractId: string) {
           </div>
         `
       });
+
+      if (error) {
+        console.error("Resend Error (API Rechazó el envío):", error);
+        console.log(`\n\n=== OTP PARA CONTRATO (EMAIL FALLÓ) ${contractId} ===\nCÓDIGO: ${code}\n======================================\n\n`);
+      } else {
+        console.log(`\n\n=== OTP PARA CONTRATO (ENVIADO A ${contract.client_email}) ===\nCÓDIGO: ${code}\n======================================\n\n`);
+      }
     } catch (e) {
-      console.error("Resend Error", e);
+      console.error("Resend Exception", e);
+      console.log(`\n\n=== OTP PARA CONTRATO (EXCEPCIÓN EMAIL) ${contractId} ===\nCÓDIGO: ${code}\n======================================\n\n`);
     }
   } else {
     // Modo desarrollo: imprimir en consola
-    console.log(`\n\n=== OTP PARA CONTRATO ${contractId} ===\nCÓDIGO: ${code}\n======================================\n\n`);
+    console.log(`\n\n=== OTP PARA CONTRATO (MODO DEV - SIN KEY) ${contractId} ===\nCÓDIGO: ${code}\n======================================\n\n`);
   }
 
   // Log
@@ -102,7 +110,7 @@ export async function verifyOTPAction(contractId: string, code: string, signatur
     .select("active_version_id")
     .eq("id", contractId)
     .single();
-    
+
   if (!contract) return { success: false, error: "Contrato no encontrado" };
 
   // 4. Calcular Hash SHA-256 del documento final (versión + firma)
@@ -126,8 +134,8 @@ export async function verifyOTPAction(contractId: string, code: string, signatur
 
   // 7. Log Auditoría Final
   const { data: auditLog } = await supabase.from("audit_logs").insert([
-    { 
-      contract_id: contractId, 
+    {
+      contract_id: contractId,
       version_id: contract.active_version_id,
       action_type: "COMPLETED",
       ip_address: ip,
@@ -136,8 +144,8 @@ export async function verifyOTPAction(contractId: string, code: string, signatur
     }
   ]).select().single();
 
-  return { 
-    success: true, 
+  return {
+    success: true,
     auditData: {
       timestamp: new Date().toISOString(),
       ip,

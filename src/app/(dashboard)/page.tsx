@@ -1,10 +1,11 @@
 import { FileText, Send, Eye, PenTool, CheckCircle } from "lucide-react";
 import { getDashboardData } from "@/app/actions/contracts";
 import Link from "next/link";
+import DownloadPdfButton from "@/components/DownloadPdfButton";
 
 export default async function DashboardPage() {
   const contracts = await getDashboardData();
-  
+
   // Calcular métricas
   const counts = {
     DRAFT: 0,
@@ -35,7 +36,7 @@ export default async function DashboardPage() {
           <h1 className="text-3xl font-bold text-[var(--color-brand-navy)]">Dashboard</h1>
           <p className="text-[var(--color-text-muted)] mt-2">Visión general del estado de tus contratos</p>
         </div>
-        <Link 
+        <Link
           href="/contratos/nuevo"
           className="flex items-center space-x-2 px-4 py-2 bg-[var(--color-brand-gold)] text-[var(--color-brand-navy-dark)] rounded-lg hover:bg-[var(--color-brand-gold-dark)] transition-colors shadow-md font-bold"
         >
@@ -100,7 +101,12 @@ export default async function DashboardPage() {
                       {new Date(contract.updated_at).toLocaleDateString()}
                     </td>
                     <td className="p-4">
-                      <Link href={`/c/${contract.id}`} target="_blank" className="text-[var(--color-brand-navy)] hover:text-[var(--color-brand-gold-dark)] text-sm font-medium">Ver Link</Link>
+                      <div className="flex items-center">
+                        <Link href={`/c/${contract.id}`} target="_blank" className="text-[var(--color-brand-navy)] hover:text-[var(--color-brand-gold-dark)] text-sm font-medium">Ver Link</Link>
+                        {contract.current_status === "COMPLETED" && (
+                          <DownloadPdfButton contractId={contract.id} />
+                        )}
+                      </div>
                     </td>
                   </tr>
                 )
