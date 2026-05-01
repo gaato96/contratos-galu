@@ -58,6 +58,9 @@ export function generatePDF(contract: any, version: any, signatureBase64: string
   const introText = `Conste por el presente documento, el Contrato de Prestación de Servicios que celebran, de una parte Gastón Gutierrez en representación de GALU (en adelante, "LA AGENCIA"), y de la otra parte ${contract.client_name} (en adelante, "EL CLIENTE"); el cual se rige bajo las siguientes declaraciones y cláusulas:`;
   printText(introText, 11, false, "left", 5);
 
+  // 2b. Párrafo de acuerdo de locación
+  printText("Ambos acuerdan celebrar el presente CONTRATO DE LOCACIÓN DE SERVICIOS DE DISEÑO Y DESARROLLO WEB, el mismo se valdrá de las siguientes condiciones:", 11, true, "left", 8);
+
   // 3. Cláusulas
   version.content.sections.forEach((section: any, index: number) => {
     cursorY += 3;

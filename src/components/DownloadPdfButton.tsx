@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { Download, Loader2 } from "lucide-react";
 import { getSignedContractData } from "@/app/actions/contracts";
-import { getAgencySettingsAction } from "@/app/actions/settings";
+import { getAgencyAssetsAction } from "@/app/actions/settings";
 import { generatePDF } from "@/utils/pdfGenerator";
 
 export default function DownloadPdfButton({ contractId }: { contractId: string }) {
@@ -14,7 +14,7 @@ export default function DownloadPdfButton({ contractId }: { contractId: string }
         try {
             const [data, settings] = await Promise.all([
                 getSignedContractData(contractId),
-                getAgencySettingsAction()
+                getAgencyAssetsAction()
             ]);
             if (data) {
                 generatePDF(data.contract, data.version, data.signature.base64_image, data.auditLog.metadata, {

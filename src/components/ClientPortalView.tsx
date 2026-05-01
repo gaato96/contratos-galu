@@ -4,7 +4,7 @@ import { useState } from "react";
 import { SignaturePad } from "@/components/SignaturePad";
 import { ShieldCheck, Mail, CheckCircle2, Loader2 } from "lucide-react";
 import { requestOTPAction, verifyOTPAction } from "@/app/actions/signing";
-import { getAgencySettingsAction } from "@/app/actions/settings";
+import { getAgencyAssetsAction } from "@/app/actions/settings";
 import { generatePDF } from "@/utils/pdfGenerator";
 
 export default function ClientPortalView({ contract }: { contract: any }) {
@@ -61,7 +61,7 @@ export default function ClientPortalView({ contract }: { contract: any }) {
       if (result.success) {
         setStep("SUCCESS");
         // Generar PDF con assets de agencia
-        const settings = await getAgencySettingsAction();
+        const settings = await getAgencyAssetsAction();
         generatePDF(contract, version, signatureData!, result.auditData, {
           logo_base64: settings?.logo_base64,
           agency_signature_base64: settings?.agency_signature_base64
