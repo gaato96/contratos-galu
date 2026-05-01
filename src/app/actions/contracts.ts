@@ -147,9 +147,8 @@ export async function deleteContractAction(contractId: string) {
 
   if (error) {
     console.error("Error deleting contract:", error);
-    return { success: false, error: error.message };
+    throw new Error(error.message);
   }
 
   revalidatePath("/");
-  return { success: true };
 }
