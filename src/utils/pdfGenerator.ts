@@ -4,72 +4,103 @@ export function generatePDF(contract: any, version: any, signatureBase64: string
   const doc = new jsPDF();
 
   const marginLeft = 20;
-  let cursorY = 20;
+  let cursorY = 25;
   const pageWidth = doc.internal.pageSize.getWidth();
+  const contentWidth = pageWidth - (marginLeft * 2);
 
-  // Función de ayuda para texto multilinea
-  const printText = (text: string, fontSize = 12, isBold = false, color = "#000000", maxWidth = 170) => {
+  // Helper for multi-line text with basic justification or left align
+  const printText = (text: string, fontSize = 11, isBold = false, align: "left" | "center" = "left", customYOffset = 0) => {
     doc.setFont("helvetica", isBold ? "bold" : "normal");
     doc.setFontSize(fontSize);
-    doc.setTextColor(color);
+    doc.setTextColor("#000000"); // Strict black for legal documents
 
-    const lines = doc.splitTextToSize(text, maxWidth);
+    const lines = doc.splitTextToSize(text, contentWidth);
 
-    if (cursorY + (lines.length * 7) > 280) {
+    if (cursorY + (lines.length * 6) > 280) {
       doc.addPage();
       cursorY = 20;
     }
 
-    doc.text(lines, marginLeft, cursorY);
-    cursorY += (lines.length * 7) + 5;
+    if (align === "center") {
+      lines.forEach((line: string) => {
+        const x = (pageWidth - doc.getTextWidth(line)) / 2;
+        doc.text(line, x, cursorY);
+        cursorY += 6;
+      });
+    } else {
+      doc.text(lines, marginLeft, cursorY);
+      cursorY += (lines.length * 6);
+    }
+
+    cursorY += customYOffset;
   };
 
   // 1. Título General
-  printText("CONTRATO DE SERVICIOS", 20, true, "#273E59");
-  printText(`Preparado para: ${contract.client_name}`, 14, false, "#64748B");
-  printText(`Monto Total: ${version.currency} $${version.total_amount}`, 14, true, "#FBC02D");
   cursorY += 10;
+  printText("CONTRATO DE PRESTACION DE SERVICIOS PROFESIONALES", 14, true, "center", 8);
 
-  // 2. Cláusulas
-  version.content.sections.forEach((section: any) => {
-    printText(section.title, 14, true, "#273E59");
-    printText(section.body, 11, false, "#333333");
-    cursorY += 5;
+  // 2. Declaración Inicial
+  const introText = `Conste por el presente documento, el Contrato de Prestación de Servicios que celebran, de una parte Gastón Gutierrez en representación de GALU (en adelante, "LA AGENCIA"), y de la otra parte ${contract.client_name} (en adelante, "EL CLIENTE"); el cual se rige bajo las siguientes declaraciones y cláusulas:`;
+  printText(introText, 11, false, "left", 5);
+
+  // 3. Cláusulas
+  version.content.sections.forEach((section: any, index: number) => {
+    cursorY += 3;
+    const clauseHeader = `CLÁUSULA ${index + 1} - ${section.title.toUpperCase()}`;
+    printText(clauseHeader, 11, true, "left", 1);
+
+    // Body text
+    printText(section.body, 11, false, "left", 4);
   });
 
-  // 3. Sello de Auditoría y Firma (Página Nueva si es necesario)
+  // 4. Sello de Auditoría y Firma (Página Nueva siempre para asegurar espacio de firmas)
   doc.addPage();
-  cursorY = 20;
+  cursorY = 25;
 
-  printText("CERTIFICADO DE FIRMA ELECTRÓNICA Y AUDITORÍA", 18, true, "#273E59");
-  printText("Documento procesado bajo cumplimiento de trazabilidad.", 10, false, "#64748B");
+  printText("CERTIFICADO DE FIRMA ELECTRÓNICA Y AUDITORÍA", 14, true, "center", 6);
+  printText("El presente documento ha sido rubricado y procesado exitosamente bajo cumplimiento de trazabilidad electrónica estricta. Las partes reconocen la validez jurídica de este instrumento.", 10, false, "left", 10);
+
   cursorY += 10;
 
-  // Firmas
+  // Firmas layout
   const rightColumnX = 110;
 
   doc.setFont("helvetica", "bold");
-  doc.setFontSize(12);
-  doc.setTextColor("#000000");
-  doc.text("Firma del Cliente:", marginLeft, cursorY);
-  doc.text("Por la Agencia:", rightColumnX, cursorY);
+  doc.setFontSize(11);
+  doc.text("Firma de EL CLIENTE:", marginLeft, cursorY);
+  doc.text("Firma de LA AGENCIA:", rightColumnX, cursorY);
 
   cursorY += 5;
-  doc.addImage(signatureBase64, 'PNG', marginLeft, cursorY, 80, 40);
+  // Cliente Signature Image
+  doc.addImage(signatureBase64, 'PNG', marginLeft, cursorY, 50, 25);
 
+  // Agencia Text Box / Signature Placeholder
   doc.setFont("helvetica", "italic");
-  doc.setFontSize(11);
-  doc.text("Documento validado y", rightColumnX, cursorY + 15);
-  doc.text("aprobado por GALU.", rightColumnX, cursorY + 22);
+  doc.text("Documento validado y", rightColumnX, cursorY + 10);
+  doc.text("aprobado electrónicamente.", rightColumnX, cursorY + 16);
 
-  cursorY += 50;
+  cursorY += 35;
 
-  // Metadata
-  printText("DATOS DE VALIDACIÓN:", 12, true, "#273E59");
-  printText(`Identificador (Email verificado vía OTP): ${auditData.email}`, 10);
-  printText(`Fecha y Hora de Firma (UTC): ${new Date(auditData.timestamp).toUTCString()}`, 10);
-  printText(`Dirección IP del Firmante: ${auditData.ip}`, 10);
-  printText(`Hash de Integridad (SHA-256): ${auditData.hash}`, 10);
+  // Aclaraciones
+  doc.setFont("helvetica", "bold");
+  doc.text(`Aclaración: ${auditData.signerName || contract.client_name}`, marginLeft, cursorY);
+  doc.text("Aclaración: Gastón Gutierrez", rightColumnX, cursorY);
+
+  doc.setFont("helvetica", "normal");
+  doc.text(`Email: ${auditData.email}`, marginLeft, cursorY + 6);
+  doc.text("Dueño de Galu Diseño Web", rightColumnX, cursorY + 6);
+
+  cursorY += 30;
+
+  // Metadata de Auditoría técnica
+  doc.setDrawColor(200);
+  doc.line(marginLeft, cursorY - 5, pageWidth - marginLeft, cursorY - 5);
+
+  printText("DATOS TÉCNICOS DE VALIDACIÓN OTP:", 9, true, "left", 2);
+  printText(`Fecha y Hora de Firma (UTC): ${new Date(auditData.timestamp).toUTCString()}`, 9);
+  printText(`Dirección IP del Firmante: ${auditData.ip}`, 9);
+  printText(`Hash de Integridad (SHA-256): ${auditData.hash}`, 9);
+  printText(`Identificador Verificado: ${auditData.email}`, 9);
 
   // Download
   doc.save(`Contrato_${contract.client_name.replace(/\s+/g, '_')}.pdf`);

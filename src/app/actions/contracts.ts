@@ -1,4 +1,5 @@
 "use server";
+import { revalidatePath } from "next/cache";
 
 import { createClient } from "@/utils/supabase/server";
 
@@ -104,7 +105,18 @@ export async function getContractForClient(contractId: string) {
 export async function getSignedContractData(contractId: string) {
   const supabase = await createClient();
 
-  const { data: contract } = await supabase.from("contracts").select("*, contract_versions(*)").eq("id", contractId).single();
+  // 1. Obtener contrato y su versión activa
+  const { data: contract, error: contractErr } = await supabase
+    .from("contracts")
+    .select("*, contract_versions!fk_active_version(*)")
+    .eq("id", contractId)
+    .single();
+
+  if (!contract || contractErr) {
+    console.error("Error fetching contract:", contractErr);
+    return null;
+  }
+
   const { data: signature } = await supabase.from("signatures").select("*").eq("contract_id", contractId).single();
   const { data: auditLog } = await supabase.from("audit_logs").select("*").eq("contract_id", contractId).eq("action_type", "COMPLETED").order("created_at", { ascending: false }).limit(1).single();
 
@@ -122,8 +134,22 @@ export async function getSignedContractData(contractId: string) {
         timestamp: auditLog.created_at,
         ip: auditLog.ip_address,
         hash: signature.document_hash,
-        email: signature.user_identifier || contract.client_email
+        email: signature.user_identifier || contract.client_email,
+        signerName: auditLog.metadata?.signer_name
       }
     }
   };
+}
+
+export async function deleteContractAction(contractId: string) {
+  const supabase = await createClient();
+  const { error } = await supabase.from("contracts").delete().eq("id", contractId);
+
+  if (error) {
+    console.error("Error deleting contract:", error);
+    return { success: false, error: error.message };
+  }
+
+  revalidatePath("/");
+  return { success: true };
 }

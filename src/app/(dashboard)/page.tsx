@@ -1,5 +1,5 @@
-import { FileText, Send, Eye, PenTool, CheckCircle } from "lucide-react";
-import { getDashboardData } from "@/app/actions/contracts";
+import { FileText, Send, Eye, PenTool, CheckCircle, Trash2 } from "lucide-react";
+import { getDashboardData, deleteContractAction } from "@/app/actions/contracts";
 import Link from "next/link";
 import DownloadPdfButton from "@/components/DownloadPdfButton";
 
@@ -101,11 +101,25 @@ export default async function DashboardPage() {
                       {new Date(contract.updated_at).toLocaleDateString()}
                     </td>
                     <td className="p-4">
-                      <div className="flex items-center">
+                      <div className="flex items-center gap-2">
                         <Link href={`/c/${contract.id}`} target="_blank" className="text-[var(--color-brand-navy)] hover:text-[var(--color-brand-gold-dark)] text-sm font-medium">Ver Link</Link>
                         {contract.current_status === "COMPLETED" && (
                           <DownloadPdfButton contractId={contract.id} />
                         )}
+                        <form action={deleteContractAction.bind(null, contract.id)}>
+                          <button
+                            type="submit"
+                            title="Eliminar contrato"
+                            className="p-1 rounded bg-red-50 text-red-500 hover:bg-red-100 hover:text-red-700 transition-colors ml-2"
+                            onClick={(e) => {
+                              if (!confirm("¿Estás seguro de eliminar este contrato? Esta acción no se puede deshacer.")) {
+                                e.preventDefault();
+                              }
+                            }}
+                          >
+                            <Trash2 className="w-5 h-5" />
+                          </button>
+                        </form>
                       </div>
                     </td>
                   </tr>

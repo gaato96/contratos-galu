@@ -81,7 +81,7 @@ export async function requestOTPAction(contractId: string) {
   return { success: true };
 }
 
-export async function verifyOTPAction(contractId: string, code: string, signatureBase64: string) {
+export async function verifyOTPAction(contractId: string, code: string, signatureBase64: string, signerName: string = "") {
   const supabase = await createClient();
   const headersList = await headers();
   const ip = headersList.get("x-forwarded-for") || "127.0.0.1";
@@ -140,7 +140,7 @@ export async function verifyOTPAction(contractId: string, code: string, signatur
       action_type: "COMPLETED",
       ip_address: ip,
       user_agent: userAgent,
-      metadata: { document_hash: documentHash }
+      metadata: { document_hash: documentHash, signer_name: signerName }
     }
   ]).select().single();
 
@@ -150,7 +150,8 @@ export async function verifyOTPAction(contractId: string, code: string, signatur
       timestamp: new Date().toISOString(),
       ip,
       hash: documentHash,
-      email: session.email
+      email: session.email,
+      signerName: signerName
     }
   };
 }

@@ -9,11 +9,12 @@ import { generatePDF } from "@/utils/pdfGenerator";
 export default function ClientPortalView({ contract }: { contract: any }) {
   const version = Array.isArray(contract.contract_versions) ? contract.contract_versions[0] : contract.contract_versions;
   const sections = version.content.sections || [];
-  
+
   const [acceptedSections, setAcceptedSections] = useState<Set<string>>(new Set());
   const [step, setStep] = useState<"READING" | "SIGNING" | "OTP" | "SUCCESS">("READING");
   const [signatureData, setSignatureData] = useState<string | null>(null);
-  
+  const [signerName, setSignerName] = useState("");
+
   const [otp, setOtp] = useState(["", "", "", "", "", ""]);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
@@ -53,9 +54,9 @@ export default function ClientPortalView({ contract }: { contract: any }) {
 
     setIsLoading(true);
     setError("");
-    
+
     try {
-      const result = await verifyOTPAction(contract.id, code, signatureData!);
+      const result = await verifyOTPAction(contract.id, code, signatureData!, signerName);
       if (result.success) {
         setStep("SUCCESS");
         // Generar PDF
@@ -75,7 +76,7 @@ export default function ClientPortalView({ contract }: { contract: any }) {
     const newOtp = [...otp];
     newOtp[index] = value;
     setOtp(newOtp);
-    
+
     // Auto-focus next
     if (value && index < 5) {
       const nextInput = document.getElementById(`otp-${index + 1}`);
@@ -92,7 +93,7 @@ export default function ClientPortalView({ contract }: { contract: any }) {
       </div>
 
       <div className="w-full max-w-3xl bg-white shadow-xl border border-slate-200 overflow-hidden">
-        
+
         {step === "READING" && (
           <div className="p-8 md:p-12">
             <div className="bg-slate-50 text-slate-800 p-5 rounded border border-slate-200 mb-8 text-sm flex items-start space-x-3 text-justify leading-relaxed">
@@ -107,15 +108,14 @@ export default function ClientPortalView({ contract }: { contract: any }) {
                   <div key={section.id} className={`p-6 md:px-8 border-b-2 transition-all duration-300 ${isAccepted ? 'bg-slate-50 border-slate-200' : 'border-slate-100 hover:bg-slate-50/50'}`}>
                     <h3 className="text-xl font-bold text-slate-900 mb-4">{section.title}</h3>
                     <p className="text-slate-700 leading-relaxed mb-6 text-justify">{section.body}</p>
-                    
+
                     <button
                       onClick={() => handleAccept(section.id)}
                       disabled={isAccepted}
-                      className={`flex items-center space-x-2 px-6 py-2.5 rounded shadow-sm font-medium transition-all ${
-                        isAccepted 
-                        ? 'bg-slate-200 text-slate-600'
-                        : 'bg-slate-900 text-white hover:bg-slate-800'
-                      }`}
+                      className={`flex items-center space-x-2 px-6 py-2.5 rounded shadow-sm font-medium transition-all ${isAccepted
+                          ? 'bg-slate-200 text-slate-600'
+                          : 'bg-slate-900 text-white hover:bg-slate-800'
+                        }`}
                     >
                       {isAccepted ? (
                         <>
@@ -134,16 +134,33 @@ export default function ClientPortalView({ contract }: { contract: any }) {
         )}
 
         {step === "SIGNING" && (
-          <div className="p-8 text-center animate-in fade-in slide-in-from-bottom-4">
-            <h2 className="text-2xl font-bold text-[var(--color-brand-navy)] mb-2">Firma del Documento</h2>
-            <p className="text-gray-600 mb-8">Por favor, dibuje su firma en el recuadro a continuación.</p>
-            
+          <div className="p-4 md:p-8 text-center animate-in fade-in slide-in-from-bottom-4">
+            <h2 className="text-2xl font-bold text-slate-900 mb-2">Firma del Documento</h2>
+            <p className="text-slate-600 mb-6">Por favor, dibuje su firma en el recuadro a continuación y complete su aclaración.</p>
+
             {error && <p className="text-red-500 mb-4">{error}</p>}
-            
+
             {isLoading ? (
-              <div className="py-12 flex justify-center"><Loader2 className="w-8 h-8 animate-spin text-[var(--color-brand-navy)]" /></div>
+              <div className="py-12 flex justify-center"><Loader2 className="w-8 h-8 animate-spin text-slate-900" /></div>
             ) : (
-              <SignaturePad onSign={handleSign} />
+              <div className="flex flex-col items-center max-w-full">
+                <div className="w-full max-w-md overflow-hidden bg-slate-50 border border-slate-200 rounded-lg shadow-inner mb-4">
+                  <SignaturePad onSign={handleSign} />
+                </div>
+                <div className="w-full max-w-md text-left mt-2 mb-4">
+                  <label htmlFor="signerName" className="block text-sm font-medium text-slate-700 mb-1">Aclaración (Nombre y Apellido)</label>
+                  <input
+                    type="text"
+                    id="signerName"
+                    value={signerName}
+                    onChange={(e) => setSignerName(e.target.value)}
+                    required
+                    placeholder="Ej. Juan Pérez"
+                    className="w-full px-4 py-2 border border-slate-300 rounded focus:ring-1 focus:ring-slate-500 outline-none transition-all"
+                  />
+                  <p className="text-xs text-slate-500 mt-1">Este nombre se imprimirá debajo de su firma en el documento final.</p>
+                </div>
+              </div>
             )}
           </div>
         )}
@@ -155,17 +172,17 @@ export default function ClientPortalView({ contract }: { contract: any }) {
             </div>
             <h2 className="text-2xl font-bold text-[var(--color-brand-navy)] mb-2">Verificación de Identidad</h2>
             <p className="text-gray-600 mb-8 max-w-md mx-auto">Hemos enviado un código de 6 dígitos a su correo electrónico. Ingréselo a continuación para confirmar su identidad y finalizar la firma electrónica.</p>
-            
+
             <div className="flex justify-center space-x-3 mb-8">
               {otp.map((digit, i) => (
-                <input 
-                  key={i} 
+                <input
+                  key={i}
                   id={`otp-${i}`}
-                  type="text" 
-                  maxLength={1} 
+                  type="text"
+                  maxLength={1}
                   value={digit}
                   onChange={(e) => handleOtpChange(i, e.target.value)}
-                  className="w-12 h-14 text-center text-2xl font-bold border-2 border-gray-300 rounded-lg focus:border-[var(--color-brand-navy)] focus:ring-0" 
+                  className="w-12 h-14 text-center text-2xl font-bold border-2 border-gray-300 rounded-lg focus:border-[var(--color-brand-navy)] focus:ring-0"
                 />
               ))}
             </div>
