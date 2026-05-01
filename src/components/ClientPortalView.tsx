@@ -62,7 +62,7 @@ export default function ClientPortalView({ contract }: { contract: any }) {
         setStep("SUCCESS");
         // Generar PDF con assets de agencia
         const settings = await getAgencyAssetsAction();
-        generatePDF(contract, version, signatureData!, result.auditData, {
+        await generatePDF(contract, version, signatureData!, result.auditData, {
           logo_base64: settings?.logo_base64,
           agency_signature_base64: settings?.agency_signature_base64
         });
@@ -92,7 +92,7 @@ export default function ClientPortalView({ contract }: { contract: any }) {
   return (
     <div className="min-h-screen bg-slate-50 flex flex-col items-center py-12 px-4 sm:px-6 font-serif text-slate-900">
       <div className="w-full max-w-3xl text-center mb-8">
-        <h1 className="text-4xl font-bold text-slate-900 mb-3">Contrato de Servicios</h1>
+        <h1 className="text-3xl sm:text-4xl font-bold text-slate-900 mb-3 uppercase tracking-wide">Contrato de Prestación de Servicios Profesionales</h1>
         <p className="text-slate-600 mt-2 text-lg">Preparado para: <span className="font-semibold text-slate-800">{contract.client_name}</span></p>
         <p className="text-slate-600 mt-1">Monto Total: <span className="font-semibold text-slate-800">{version.currency} ${version.total_amount}</span></p>
       </div>

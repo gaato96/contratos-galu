@@ -5,7 +5,7 @@ interface AgencyAssets {
   agency_signature_base64?: string | null;
 }
 
-export function generatePDF(contract: any, version: any, signatureBase64: string, auditData: any, agencyAssets?: AgencyAssets) {
+export async function generatePDF(contract: any, version: any, signatureBase64: string, auditData: any, agencyAssets?: { logo_base64?: string, agency_signature_base64?: string }) {
   const doc = new jsPDF();
 
   const marginLeft = 20;
@@ -92,10 +92,25 @@ export function generatePDF(contract: any, version: any, signatureBase64: string
   // Cliente Signature Image
   doc.addImage(signatureBase64, 'PNG', marginLeft, cursorY, 50, 25);
 
-  // Agencia Signature Image (si existe) o texto de placeholder
-  if (agencyAssets?.agency_signature_base64) {
+  // Agencia Signature Image - cargar desde /firma mia.png
+  let agencySignatureData = agencyAssets?.agency_signature_base64;
+  if (!agencySignatureData) {
     try {
-      doc.addImage(agencyAssets.agency_signature_base64, 'PNG', rightColumnX, cursorY, 50, 25);
+      const resp = await fetch('/firma%20mia.png');
+      const blob = await resp.blob();
+      agencySignatureData = await new Promise<string>((resolve) => {
+        const reader = new FileReader();
+        reader.onloadend = () => resolve(reader.result as string);
+        reader.readAsDataURL(blob);
+      });
+    } catch (e) {
+      console.warn('No se pudo cargar firma de agencia:', e);
+    }
+  }
+
+  if (agencySignatureData) {
+    try {
+      doc.addImage(agencySignatureData, 'PNG', rightColumnX, cursorY, 50, 25);
     } catch (e) {
       console.warn("No se pudo inyectar la firma de agencia:", e);
       doc.setFont("helvetica", "italic");

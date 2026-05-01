@@ -17,7 +17,7 @@ export default function DownloadPdfButton({ contractId }: { contractId: string }
                 getAgencyAssetsAction()
             ]);
             if (data) {
-                generatePDF(data.contract, data.version, data.signature.base64_image, data.auditLog.metadata, {
+                await generatePDF(data.contract, data.version, data.signature.base64_image, data.auditLog.metadata, {
                     logo_base64: settings?.logo_base64,
                     agency_signature_base64: settings?.agency_signature_base64
                 });
